@@ -1,4 +1,4 @@
-# Instrumentação Application Insights
+# Application Insights Instrumentation
 
 ## .NET / ASP.NET Core
 
@@ -11,10 +11,10 @@ dotnet add package Microsoft.ApplicationInsights.AspNetCore
 builder.Services.AddApplicationInsightsTelemetry(options =>
 {
     options.ConnectionString = builder.Configuration["ApplicationInsights:ConnectionString"];
-    // Usar Key Vault reference: @Microsoft.KeyVault(SecretUri=...)
+    // Use Key Vault reference: @Microsoft.KeyVault(SecretUri=...)
 });
 
-// Sampling adaptativo (reduz custos em produção)
+// Adaptive sampling (reduces costs in production)
 builder.Services.Configure<TelemetryConfiguration>(config =>
 {
     config.DefaultTelemetrySink.TelemetryProcessorChainBuilder
@@ -24,7 +24,7 @@ builder.Services.Configure<TelemetryConfiguration>(config =>
 ```
 
 ```csharp
-// Telemetria customizada
+// Custom telemetry
 public class OrderService
 {
     private readonly TelemetryClient _telemetry;
@@ -36,7 +36,7 @@ public class OrderService
 
         try
         {
-            // lógica...
+            // logic...
             _telemetry.TrackEvent("OrderProcessed", new Dictionary<string, string>
             {
                 ["OrderId"] = order.Id.ToString(),
@@ -60,7 +60,7 @@ npm install @azure/monitor-opentelemetry
 ```
 
 ```typescript
-// instrumentation.ts — importar ANTES de tudo
+// instrumentation.ts — import BEFORE everything else
 import { useAzureMonitor } from "@azure/monitor-opentelemetry";
 
 useAzureMonitor({
@@ -72,7 +72,7 @@ useAzureMonitor({
 ```
 
 ```typescript
-// Telemetria customizada com OpenTelemetry
+// Custom telemetry with OpenTelemetry
 import { trace, metrics } from "@opentelemetry/api";
 
 const tracer = trace.getTracer("meu-servico");
@@ -84,7 +84,7 @@ async function processRequest(req: Request) {
   requestCounter.add(1, { endpoint: req.url });
 
   try {
-    // lógica...
+    // logic...
     span.setStatus({ code: SpanStatusCode.OK });
   } catch (err) {
     span.recordException(err as Error);
@@ -103,21 +103,21 @@ pip install azure-monitor-opentelemetry
 ```
 
 ```python
-# main.py — primeira linha
+# main.py — first line
 from azure.monitor.opentelemetry import configure_azure_monitor
 configure_azure_monitor(
     connection_string=os.environ["APPLICATIONINSIGHTS_CONNECTION_STRING"]
 )
 
-# FastAPI — auto-instrumentado após configure_azure_monitor()
+# FastAPI — auto-instrumented after configure_azure_monitor()
 from fastapi import FastAPI
 app = FastAPI()
 ```
 
-## Connection String via Key Vault (produção)
+## Connection String via Key Vault (production)
 
 ```bash
-# Guardar no Key Vault
+# Store in Key Vault
 az keyvault secret set \
   --vault-name <kv-name> \
   --name "AppInsights-ConnectionString" \
@@ -127,7 +127,7 @@ az keyvault secret set \
 ```
 
 ```hcl
-# Container App — referência ao Key Vault (sem expor a string)
+# Container App — Key Vault reference (without exposing the string)
 resource "azurerm_container_app" "this" {
   secret {
     name                = "appinsights-connection-string"

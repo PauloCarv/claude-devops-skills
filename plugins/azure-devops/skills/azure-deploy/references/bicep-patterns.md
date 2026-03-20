@@ -1,6 +1,6 @@
-# Padrões Bicep Aprovados
+# Approved Bicep Patterns
 
-## Container App — padrão mínimo
+## Container App — minimum pattern
 
 ```bicep
 param projectName string
@@ -16,7 +16,7 @@ var tags = {
   'cost-center': 'engineering'
 }
 
-// Managed Identity (sempre — nunca usar connection strings diretas)
+// Managed Identity (always — never use direct connection strings)
 resource identity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
   name: '${projectName}-${environment}-id'
   location: location
@@ -55,7 +55,7 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
         external: true
         targetPort: containerPort
       }
-      secrets: []  // Usar Key Vault references, não valores diretos
+      secrets: []  // Use Key Vault references, not direct values
     }
     template: {
       containers: [{
@@ -72,7 +72,7 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
 }
 ```
 
-## Key Vault — acesso via Managed Identity
+## Key Vault — access via Managed Identity
 
 ```bicep
 resource kv 'Microsoft.KeyVault/vaults@2023-07-01' = {
@@ -81,13 +81,13 @@ resource kv 'Microsoft.KeyVault/vaults@2023-07-01' = {
   properties: {
     sku: { family: 'A', name: 'standard' }
     tenantId: subscription().tenantId
-    enableRbacAuthorization: true  // Usar RBAC, não access policies legacy
+    enableRbacAuthorization: true  // Use RBAC, not legacy access policies
     enableSoftDelete: true
     softDeleteRetentionInDays: environment == 'prod' ? 90 : 7
   }
 }
 
-// Role assignment: Key Vault Secrets User para a Managed Identity
+// Role assignment: Key Vault Secrets User for the Managed Identity
 resource kvRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(kv.id, identity.id, '4633458b-17de-408a-b874-0445c86b69e6')
   scope: kv
@@ -99,7 +99,7 @@ resource kvRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' =
 }
 ```
 
-## Outputs obrigatórios
+## Required outputs
 
 ```bicep
 output appUrl string = 'https://${app.properties.configuration.ingress.fqdn}'

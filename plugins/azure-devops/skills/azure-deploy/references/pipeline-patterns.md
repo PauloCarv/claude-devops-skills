@@ -1,6 +1,6 @@
-# Padrões de Pipeline Azure DevOps
+# Azure DevOps Pipeline Patterns
 
-## Pipeline multi-stage (padrão aprovado)
+## Multi-stage pipeline (approved pattern)
 
 ```yaml
 # .azure/pipelines/deploy.yml
@@ -28,7 +28,7 @@ stages:
       vmImage: ubuntu-latest
     steps:
     - task: AzureCLI@2
-      displayName: 'Build & push para ACR'
+      displayName: 'Build & push to ACR'
       inputs:
         azureSubscription: 'azure-service-connection'
         scriptType: bash
@@ -48,7 +48,7 @@ stages:
     - group: env-dev
   jobs:
   - deployment: DeployDev
-    environment: 'dev'             # Sem approvals
+    environment: 'dev'             # No approvals
     strategy:
       runOnce:
         deploy:
@@ -95,7 +95,7 @@ stages:
     - group: env-prod
   jobs:
   - deployment: DeployProd
-    environment: 'prod'            # Configurar approvals no Azure DevOps UI
+    environment: 'prod'            # Configure approvals in Azure DevOps UI
     strategy:
       runOnce:
         deploy:
@@ -106,7 +106,7 @@ stages:
               imageTag: $(Build.BuildId)
 ```
 
-## Template reutilizável: deploy-container-app.yml
+## Reusable template: deploy-container-app.yml
 
 ```yaml
 # .azure/pipelines/templates/deploy-container-app.yml
@@ -131,8 +131,8 @@ steps:
         --set-env-vars \
           ENVIRONMENT=${{ parameters.environment }} \
           VERSION=${{ parameters.imageTag }}
-      
-      # Verificar deployment
+
+      # Verify deployment
       az containerapp revision list \
         --name myapp-${{ parameters.environment }}-aca \
         --resource-group myapp-${{ parameters.environment }}-rg \

@@ -79,8 +79,8 @@ stages:
             -var="environment=$(ENVIRONMENT)" \
             -out=tfplan \
             -detailed-exitcode
-          
-          # Guardar o plano como artefacto
+
+          # Save the plan as an artifact
           terraform show -json tfplan > tfplan.json
 
     - task: PublishPipelineArtifact@1
@@ -95,7 +95,7 @@ stages:
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
   jobs:
   - deployment: TerraformApply
-    environment: '$(ENVIRONMENT)'   # approvals manuais para prod no UI
+    environment: '$(ENVIRONMENT)'   # manual approvals for prod in the UI
     pool:
       vmImage: ubuntu-latest
     strategy:
@@ -115,7 +115,7 @@ stages:
               workingDirectory: $(WORKING_DIR)
               scriptLocation: inlineScript
               inlineScript: |
-                terraform init  # re-init no agent de apply
+                terraform init  # re-init on the apply agent
                 terraform apply tfplan
 ```
 
@@ -186,11 +186,11 @@ jobs:
     needs: plan
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    environment: ${{ matrix.environment }}   # required reviewers para prod
+    environment: ${{ matrix.environment }}   # required reviewers for prod
     strategy:
       matrix:
         environment: [dev, staging, prod]
-      max-parallel: 1   # sequencial: dev → staging → prod
+      max-parallel: 1   # sequential: dev → staging → prod
 
     steps:
     - uses: actions/checkout@v4

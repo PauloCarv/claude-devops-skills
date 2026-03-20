@@ -1,25 +1,25 @@
-# Padrões Azure Provider — Terraform
+# Azure Provider Patterns — Terraform
 
-## Autenticação recomendada (OIDC / Managed Identity)
+## Recommended authentication (OIDC / Managed Identity)
 
 ```hcl
-# Azure DevOps — OIDC (sem service principal passwords)
+# Azure DevOps — OIDC (no service principal passwords)
 provider "azurerm" {
   features {}
   use_oidc        = true
   subscription_id = var.subscription_id
   tenant_id       = var.tenant_id
-  client_id       = var.client_id   # app registration com federated credential
+  client_id       = var.client_id   # app registration with federated credential
 }
 
-# Local / CI com az login
+# Local / CI with az login
 provider "azurerm" {
   features {}
-  # usa credenciais do az login automaticamente
+  # uses az login credentials automatically
 }
 ```
 
-## Resource Group com tags obrigatórias
+## Resource Group with mandatory tags
 
 ```hcl
 locals {
@@ -39,7 +39,7 @@ resource "azurerm_resource_group" "this" {
 }
 ```
 
-## Container Apps — padrão modular
+## Container Apps — modular pattern
 
 ```hcl
 resource "azurerm_container_app_environment" "this" {
@@ -90,7 +90,7 @@ resource "azurerm_container_app" "this" {
 }
 ```
 
-## Key Vault com RBAC
+## Key Vault with RBAC
 
 ```hcl
 resource "azurerm_key_vault" "this" {
@@ -99,13 +99,13 @@ resource "azurerm_key_vault" "this" {
   resource_group_name      = azurerm_resource_group.this.name
   tenant_id                = data.azurerm_client_config.current.tenant_id
   sku_name                 = "standard"
-  enable_rbac_authorization = true   # RBAC em vez de access policies legacy
+  enable_rbac_authorization = true   # RBAC instead of legacy access policies
   soft_delete_retention_days = var.environment == "prod" ? 90 : 7
   purge_protection_enabled   = var.environment == "prod"
   tags                       = local.required_tags
 }
 
-# Managed Identity acede ao Key Vault via RBAC
+# Managed Identity accesses Key Vault via RBAC
 resource "azurerm_role_assignment" "kv_secrets_user" {
   scope                = azurerm_key_vault.this.id
   role_definition_name = "Key Vault Secrets User"
@@ -113,7 +113,7 @@ resource "azurerm_role_assignment" "kv_secrets_user" {
 }
 ```
 
-## AKS — configuração base
+## AKS — base configuration
 
 ```hcl
 resource "azurerm_kubernetes_cluster" "this" {
@@ -151,12 +151,12 @@ resource "azurerm_kubernetes_cluster" "this" {
 
   lifecycle {
     prevent_destroy = var.environment == "prod"
-    ignore_changes  = [kubernetes_version]   # upgrades geridos separadamente
+    ignore_changes  = [kubernetes_version]   # upgrades managed separately
   }
 }
 ```
 
-## Versões de providers recomendadas
+## Recommended provider versions
 
 ```hcl
 terraform {

@@ -6,14 +6,14 @@
     "email": "paulo@carvalho.ws"
   },
   "metadata": {
-    "description": "Skills e agentes para DevOps Azure: Container Apps, APIM, Monitor, Terraform, Kubernetes"
+    "description": "Skills and agents for Azure DevOps: Container Apps, APIM, Monitor, Terraform, Kubernetes"
   },
   "plugins": [
     {
       "name": "azure-devops",
       "source": "./plugins/azure-devops",
       "version": "1.0.0",
-      "description": "Agente e skills para operações DevOps Azure: deploy, monitor, APIM, Container Apps, Terraform e Kubernetes",
+      "description": "Agent and skills for Azure DevOps operations: deploy, monitor, APIM, Container Apps, Terraform and Kubernetes",
       "keywords": ["azure", "devops", "terraform", "kubernetes", "container-apps", "apim"]
     }
   ]

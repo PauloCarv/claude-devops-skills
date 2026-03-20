@@ -1,43 +1,43 @@
 ---
 name: azure-container-apps
 description: >
-  Especialista Azure Container Apps. Usa quando configurares Container Apps,
-  scaling rules (KEDA), Dapr, managed certificates, revisões, traffic splitting,
-  jobs, secrets via Key Vault, Container Apps Environment, ou diagnosticar
-  problemas de containerização no Azure. Ativa automaticamente para pedidos
-  sobre Container Apps, ACA, KEDA scaling, Dapr sidecars, ou revisões.
+  Azure Container Apps specialist. Use when configuring Container Apps,
+  scaling rules (KEDA), Dapr, managed certificates, revisions, traffic splitting,
+  jobs, secrets via Key Vault, Container Apps Environment, or diagnosing
+  containerization issues on Azure. Activates automatically for requests
+  about Container Apps, ACA, KEDA scaling, Dapr sidecars, or revisions.
 invocation: auto
 ---
 
 # Azure Container Apps
 
-Especialista em Container Apps: scaling, Dapr, revisões, jobs e diagnóstico.
+Container Apps specialist: scaling, Dapr, revisions, jobs, and diagnostics.
 
-## Comandos essenciais
+## Essential commands
 
 ```bash
-# Ver estado de uma app
+# Show app status
 az containerapp show \
   --name <app> --resource-group <rg> \
   --query "{fqdn:properties.configuration.ingress.fqdn, replicas:properties.template.scale, revision:properties.latestRevisionName}"
 
-# Listar revisões
+# List revisions
 az containerapp revision list \
   --name <app> --resource-group <rg> \
   --query "[].{name:name, active:properties.active, traffic:properties.trafficWeight, replicas:properties.replicas}" \
   -o table
 
-# Ver logs em tempo real
+# Stream logs in real time
 az containerapp logs show \
   --name <app> --resource-group <rg> \
   --follow --tail 50
 
-# Forçar nova revisão (redeploy)
+# Force a new revision (redeploy)
 az containerapp update \
   --name <app> --resource-group <rg> \
   --image <registry>/<image>:<new-tag>
 
-# Escalar manualmente para debug
+# Scale manually for debugging
 az containerapp update \
   --name <app> --resource-group <rg> \
   --min-replicas 1 --max-replicas 1
@@ -46,9 +46,9 @@ az containerapp update \
 ## Scaling Rules (KEDA)
 
 ```yaml
-# HTTP scaling (mais comum)
+# HTTP scaling (most common)
 scale:
-  minReplicas: 0          # scale-to-zero em dev/staging
+  minReplicas: 0          # scale-to-zero in dev/staging
   maxReplicas: 10
   rules:
     - name: http-scaling
@@ -66,7 +66,7 @@ scale:
         type: azure-servicebus
         metadata:
           queueName: my-queue
-          messageCount: "5"       # réplicas por cada 5 mensagens
+          messageCount: "5"       # replicas per 5 messages
         auth:
           - secretRef: servicebus-connection
             triggerParameter: connection
@@ -84,17 +84,17 @@ scale:
           value: "70"
 ```
 
-## Dapr — configuração básica
+## Dapr — basic configuration
 
 ```bash
-# Ativar Dapr numa app
+# Enable Dapr on an app
 az containerapp dapr enable \
   --name <app> --resource-group <rg> \
-  --dapr-app-id meu-servico \
+  --dapr-app-id my-service \
   --dapr-app-port 8080 \
   --dapr-app-protocol http
 
-# Criar componente Dapr (state store)
+# Create a Dapr component (state store)
 az containerapp env dapr-component set \
   --name <environment> --resource-group <rg> \
   --dapr-component-name statestore \
@@ -112,19 +112,19 @@ EOF
 ## Traffic Splitting (blue/green / canary)
 
 ```bash
-# Canary: 10% para nova revisão
+# Canary: 10% to new revision
 az containerapp ingress traffic set \
   --name <app> --resource-group <rg> \
   --revision-weight \
     latest=10 \
-    <revision-anterior>=90
+    <previous-revision>=90
 
-# Promover nova revisão para 100%
+# Promote new revision to 100%
 az containerapp ingress traffic set \
   --name <app> --resource-group <rg> \
   --revision-weight latest=100
 
-# Rollback para revisão anterior
+# Rollback to previous revision
 az containerapp revision activate \
   --name <app> --resource-group <rg> \
   --revision <revision-name>
@@ -133,21 +133,21 @@ az containerapp ingress traffic set \
   --revision-weight <revision-name>=100
 ```
 
-## Jobs — tarefas agendadas e event-driven
+## Jobs — scheduled and event-driven tasks
 
 ```bash
-# Criar job agendado (cron)
+# Create a scheduled job (cron)
 az containerapp job create \
-  --name meu-job --resource-group <rg> \
+  --name my-job --resource-group <rg> \
   --environment <environment> \
   --trigger-type Schedule \
   --cron-expression "0 2 * * *" \
   --image <registry>/<job-image>:<tag> \
   --cpu 0.5 --memory 1Gi
 
-# Job event-driven (Service Bus)
+# Event-driven job (Service Bus)
 az containerapp job create \
-  --name processador-job --resource-group <rg> \
+  --name processor-job --resource-group <rg> \
   --environment <environment> \
   --trigger-type Event \
   --min-executions 0 \
@@ -158,15 +158,15 @@ az containerapp job create \
   --scale-rule-auth "connection=servicebus-secret"
 ```
 
-## Diagnóstico de problemas comuns
+## Diagnosing common issues
 
 ```bash
-# App não arranca — ver system logs
+# App not starting — check system logs
 az containerapp logs show \
   --name <app> --resource-group <rg> \
   --type system
 
-# Ver eventos de scaling
+# Check scaling events
 az monitor log-analytics query \
   --workspace <workspace-id> \
   --analytics-query "
@@ -176,32 +176,32 @@ az monitor log-analytics query \
     | order by TimeGenerated desc
     | take 20"
 
-# Verificar health probes
+# Check health probes
 az containerapp show \
   --name <app> --resource-group <rg> \
   --query "properties.template.containers[0].probes"
 
-# Testar conectividade interna (via Dapr ou direct)
+# Test internal connectivity (via Dapr or direct)
 az containerapp exec \
   --name <app> --resource-group <rg> \
-  --command "curl -f http://outro-servico/health"
+  --command "curl -f http://other-service/health"
 ```
 
 ## Managed Certificates (HTTPS custom domain)
 
 ```bash
-# Adicionar domínio customizado
+# Add a custom domain
 az containerapp hostname add \
   --name <app> --resource-group <rg> \
-  --hostname minha-app.meudominio.com
+  --hostname my-app.mydomain.com
 
-# Criar managed certificate (gratuito)
+# Create a managed certificate (free)
 az containerapp ssl upload \
   --name <app> --resource-group <rg> \
-  --hostname minha-app.meudominio.com \
+  --hostname my-app.mydomain.com \
   --certificate-type managed
 
-# Verificar estado do certificado
+# Check certificate status
 az containerapp hostname list \
   --name <app> --resource-group <rg> \
   -o table

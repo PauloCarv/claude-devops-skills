@@ -1,7 +1,7 @@
 {
   "name": "azure-devops",
   "version": "1.0.0",
-  "description": "Agente e skills para operações DevOps Azure",
+  "description": "Agent and skills for Azure DevOps operations",
   "author": {
     "name": "Paulo"
   },

@@ -1,36 +1,36 @@
 ---
 name: azure-monitor
 description: >
-  Especialista Azure Monitor, Log Analytics e Application Insights. Usa quando
-  precisares de queries KQL, configurar alertas, dashboards, instrumentar
-  aplicações com telemetria, analisar logs de Container Apps/AKS/Function Apps,
-  diagnosticar problemas de produção, ou criar workbooks Azure Monitor.
-  Ativa automaticamente para pedidos de logs, métricas, observabilidade, KQL,
-  Application Insights, alertas ou troubleshooting Azure.
+  Azure Monitor, Log Analytics, and Application Insights specialist. Use when
+  you need KQL queries, alert configuration, dashboards, instrumenting
+  applications with telemetry, analyzing Container Apps/AKS/Function Apps logs,
+  diagnosing production issues, or creating Azure Monitor workbooks.
+  Activates automatically for requests about logs, metrics, observability, KQL,
+  Application Insights, alerts, or Azure troubleshooting.
 invocation: auto
 ---
 
 # Azure Monitor & Application Insights
 
-Especialista em observabilidade Azure: Log Analytics, Application Insights,
-KQL, alertas e dashboards.
+Azure observability specialist: Log Analytics, Application Insights,
+KQL, alerts, and dashboards.
 
-## Quando usar esta skill
+## When to use this skill
 
-| Cenário | Ação |
+| Scenario | Action |
 |---|---|
-| Queries KQL de logs/métricas | Compor e otimizar queries |
-| Instrumentar app com telemetria | Ver `references/instrumentation.md` |
-| Configurar alertas | Ver `references/alerts.md` |
-| Troubleshooting Container Apps/AKS | Queries de diagnóstico abaixo |
-| Criar dashboards/workbooks | Estrutura de workbook JSON |
+| KQL queries for logs/metrics | Compose and optimize queries |
+| Instrument app with telemetry | See `references/instrumentation.md` |
+| Configure alerts | See `references/alerts.md` |
+| Troubleshoot Container Apps/AKS | Diagnostic queries below |
+| Create dashboards/workbooks | Workbook JSON structure |
 
-## Queries KQL essenciais
+## Essential KQL queries
 
-### Application Insights — performance e erros
+### Application Insights — performance and errors
 
 ```kql
-// Requests lentos (p95 por endpoint)
+// Slow requests (p95 per endpoint)
 requests
 | where timestamp > ago(1h)
 | summarize
@@ -40,7 +40,7 @@ requests
     by name, resultCode
 | order by percentile_duration_95 desc
 
-// Taxa de erros por operação
+// Error rate per operation
 requests
 | where timestamp > ago(24h)
 | summarize
@@ -51,14 +51,14 @@ requests
 | where error_rate > 1
 | order by error_rate desc
 
-// Exceções agrupadas
+// Grouped exceptions
 exceptions
 | where timestamp > ago(6h)
 | summarize count() by type, outerMessage
 | order by count_ desc
 | take 20
 
-// Dependências lentas (bases de dados, APIs externas)
+// Slow dependencies (databases, external APIs)
 dependencies
 | where timestamp > ago(1h) and success == false or duration > 1000
 | summarize
@@ -69,17 +69,17 @@ dependencies
 | order by avg_duration desc
 ```
 
-### Container Apps — diagnóstico
+### Container Apps — diagnostics
 
 ```kql
-// Logs de um container app específico
+// Logs from a specific container app
 ContainerAppConsoleLogs_CL
 | where ContainerAppName_s == "minha-app"
 | where TimeGenerated > ago(1h)
 | project TimeGenerated, Log_s, ContainerName_s, RevisionName_s
 | order by TimeGenerated desc
 
-// Erros e crashes
+// Errors and crashes
 ContainerAppSystemLogs_CL
 | where TimeGenerated > ago(6h)
 | where Reason_s in ("BackOff", "OOMKill", "Error")
@@ -93,16 +93,16 @@ ContainerAppSystemLogs_CL
 | render timechart
 ```
 
-### AKS — logs e métricas
+### AKS — logs and metrics
 
 ```kql
-// Pods com erros
+// Pods with errors
 KubePodInventory
 | where TimeGenerated > ago(1h)
 | where PodStatus !in ("Running", "Succeeded")
 | project TimeGenerated, Name, Namespace, PodStatus, ContainerStatus
 
-// Consumo de memória por namespace
+// Memory consumption per namespace
 KubeNodeInventory
 | join KubePodInventory on Computer
 | summarize
@@ -117,10 +117,10 @@ KubeEvents
 | project TimeGenerated, Name, Message, Namespace
 ```
 
-### Alertas — queries base
+### Alerts — base queries
 
 ```kql
-// Disponibilidade abaixo de 99.9%
+// Availability below 99.9%
 availabilityResults
 | where timestamp > ago(5m)
 | summarize
@@ -130,7 +130,7 @@ availabilityResults
 | extend availability = ok * 100.0 / total
 | where availability < 99.9
 
-// CPU acima de 80% por 5 min
+// CPU above 80% for 5 min
 Perf
 | where ObjectName == "Processor" and CounterName == "% Processor Time"
 | where TimeGenerated > ago(5m)
@@ -138,7 +138,7 @@ Perf
 | where avg_CounterValue > 80
 ```
 
-## Comandos az monitor úteis
+## Useful az monitor commands
 
 ```bash
 # Queries via CLI
@@ -147,7 +147,7 @@ az monitor app-insights query \
   --analytics-query "requests | summarize count() by bin(timestamp, 1h) | render timechart" \
   --start-time 2024-01-01T00:00:00Z
 
-# Listar alertas ativos
+# List active alerts
 az monitor alert list --resource-group <rg> --output table
 
 # Log Analytics query
@@ -155,7 +155,7 @@ az monitor log-analytics query \
   --workspace <workspace-id> \
   --analytics-query "ContainerAppConsoleLogs_CL | take 50"
 
-# Ver métricas de um recurso
+# View metrics for a resource
 az monitor metrics list \
   --resource <resource-id> \
   --metric "Requests" \
@@ -163,7 +163,7 @@ az monitor metrics list \
   --aggregation Average
 ```
 
-## Referências
+## References
 
-- `references/instrumentation.md` — SDK setup para .NET, Node.js, Python
-- `references/alerts.md` — configuração de alertas e action groups
+- `references/instrumentation.md` — SDK setup for .NET, Node.js, Python
+- `references/alerts.md` — alert configuration and action groups

@@ -1,48 +1,48 @@
 ---
 name: k8s-security-policies
 description: >
-  Kubernetes security hardening specialist. Implementa NetworkPolicies,
-  Pod Security Standards, RBAC granular, OPA Gatekeeper constraints e
-  service mesh mTLS. Usa quando precisas de hardening de cluster,
-  compliance de segurança, auditoria RBAC ou políticas de rede K8s.
+  Kubernetes security hardening specialist. Implements NetworkPolicies,
+  Pod Security Standards, granular RBAC, OPA Gatekeeper constraints and
+  service mesh mTLS. Use when you need cluster hardening,
+  security compliance, RBAC auditing or K8s network policies.
 invocation: auto
 ---
 
 # K8s Security Policies
 
-Especialista em segurança Kubernetes. Aplica o princípio de least privilege
-em toda a stack: rede, identidade, runtime e supply chain.
+Kubernetes security specialist. Applies the principle of least privilege
+across the entire stack: network, identity, runtime and supply chain.
 
-## Áreas de atuação
+## Areas of focus
 
-1. **NetworkPolicies** — segmentação de rede, default-deny, egress control
-2. **Pod Security Standards** — Restricted, Baseline, Privileged por namespace
-3. **RBAC granular** — roles mínimas, auditoria de permissões excessivas
-4. **OPA Gatekeeper** — políticas como código, constraints e templates
+1. **NetworkPolicies** — network segmentation, default-deny, egress control
+2. **Pod Security Standards** — Restricted, Baseline, Privileged per namespace
+3. **Granular RBAC** — minimal roles, auditing of excessive permissions
+4. **OPA Gatekeeper** — policies as code, constraints and templates
 5. **Service Mesh mTLS** — Istio/Linkerd, mutual TLS, authorization policies
 6. **Supply chain** — image signing, admission webhooks, registry policies
 
-## Processo de hardening
+## Hardening process
 
-### 1. Auditoria inicial
+### 1. Initial audit
 ```bash
-# Ver todos os pods a correr como root
+# List all pods running as root
 kubectl get pods -A -o json | jq '.items[] | select(.spec.containers[].securityContext.runAsUser == 0) | .metadata.name'
 
-# Listar service accounts com cluster-admin
+# List service accounts with cluster-admin
 kubectl get clusterrolebindings -o json | jq '.items[] | select(.roleRef.name=="cluster-admin") | .subjects'
 
-# Verificar pods sem resource limits
+# Check pods without resource limits
 kubectl get pods -A -o json | jq '.items[] | select(.spec.containers[].resources.limits == null) | .metadata.name'
 
-# Listar NetworkPolicies por namespace
+# List NetworkPolicies by namespace
 kubectl get networkpolicies -A
 ```
 
-### 2. Pod Security Standards por namespace
+### 2. Pod Security Standards per namespace
 
 ```yaml
-# Aplicar PSS "restricted" a um namespace
+# Apply PSS "restricted" to a namespace
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -54,10 +54,10 @@ metadata:
     pod-security.kubernetes.io/warn: restricted
 ```
 
-### 3. OPA Gatekeeper — exemplos de constraints
+### 3. OPA Gatekeeper — constraint examples
 
 ```yaml
-# Proibir imagens com tag "latest"
+# Disallow images with "latest" tag
 apiVersion: constraints.gatekeeper.sh/v1beta1
 kind: K8sDisallowedTags
 metadata:
@@ -70,7 +70,7 @@ spec:
   parameters:
     tags: ["latest"]
 ---
-# Obrigar resource limits
+# Require resource limits
 apiVersion: constraints.gatekeeper.sh/v1beta1
 kind: K8sRequiredResources
 metadata:
@@ -88,7 +88,7 @@ spec:
 ### 4. Istio — Authorization Policy (mTLS)
 
 ```yaml
-# Ativar mTLS estrito no namespace
+# Enable strict mTLS in the namespace
 apiVersion: security.istio.io/v1beta1
 kind: PeerAuthentication
 metadata:
@@ -98,7 +98,7 @@ spec:
   mtls:
     mode: STRICT
 ---
-# Permitir apenas tráfego do frontend para o backend
+# Allow only traffic from frontend to backend
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
@@ -118,7 +118,7 @@ spec:
             paths: ["/api/*"]
 ```
 
-### 5. Admission Webhook — bloquear privileged containers
+### 5. Admission Webhook — block privileged containers
 
 ```yaml
 apiVersion: admissionregistration.k8s.io/v1
@@ -143,39 +143,39 @@ spec:
       message: "Privileged containers are not allowed"
 ```
 
-## Checklist de hardening (produção)
+## Hardening checklist (production)
 
 ```
-[ ] Pod Security Standards: "restricted" em namespaces de produção
-[ ] NetworkPolicy default-deny em todos os namespaces
-[ ] RBAC: sem cluster-admin desnecessários
-[ ] Sem service accounts com permissões excessivas
-[ ] Resource limits em todos os containers
-[ ] runAsNonRoot: true em todos os pods
-[ ] readOnlyRootFilesystem: true onde possível
+[ ] Pod Security Standards: "restricted" in production namespaces
+[ ] NetworkPolicy default-deny in all namespaces
+[ ] RBAC: no unnecessary cluster-admin bindings
+[ ] No service accounts with excessive permissions
+[ ] Resource limits on all containers
+[ ] runAsNonRoot: true on all pods
+[ ] readOnlyRootFilesystem: true where possible
 [ ] allowPrivilegeEscalation: false
 [ ] capabilities: drop: ["ALL"]
-[ ] Imagens assinadas (cosign/Notary)
-[ ] Registry privado — sem pulls do Docker Hub em prod
-[ ] Secrets geridos externamente (Azure Key Vault, Vault)
-[ ] Audit logs ativos no API server
-[ ] mTLS ativo (Istio/Linkerd) em serviços críticos
-[ ] OPA Gatekeeper com políticas de compliance
+[ ] Signed images (cosign/Notary)
+[ ] Private registry — no Docker Hub pulls in prod
+[ ] Secrets managed externally (Azure Key Vault, Vault)
+[ ] Audit logs enabled on the API server
+[ ] mTLS enabled (Istio/Linkerd) on critical services
+[ ] OPA Gatekeeper with compliance policies
 ```
 
-## Comandos de auditoria contínua
+## Continuous audit commands
 
 ```bash
 # kube-bench — CIS Benchmark
 kubectl apply -f https://raw.githubusercontent.com/aquasecurity/kube-bench/main/job.yaml
 kubectl logs job/kube-bench
 
-# trivy — scan de imagens e configs
+# trivy — image and config scan
 trivy k8s --report summary cluster
 
-# kubeaudit — auditoria de segurança
+# kubeaudit — security audit
 kubeaudit all -n production
 
-# polaris — boas práticas
+# polaris — best practices
 polaris audit --kubernetes --format=pretty
 ```
